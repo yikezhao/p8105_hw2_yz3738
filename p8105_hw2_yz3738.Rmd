@@ -150,5 +150,32 @@ snp_original =
   relocate(year, month)
 ```
 
+Read the unemployment data.
 
+```{r}
+unemployment_original = 
+  read.csv(
+    "./Data/unemployment.csv"
+  )%>%
+  janitor::clean_names()
 
+unemployment_tidy = 
+  pivot_longer(
+    unemployment_original,
+    jan:dec,
+    names_to = "month",
+    values_to = "unemployment_rate"
+  ) %>% 
+  
+mutate(month = recode(month, "jan" = "1", "feb" = "2",  "mar" = "3", "apr" = "4", "may" = "5","jun" = "6", "jul" = "7", "aug" = "8", "sep" = "9", "oct" = "10", "nov" = "11", "dec" = "12"))
+```
+
+Join the datasets together.
+
+```{r}
+temp1 = left_join(pols_month_tidy,snp_original, by = "month")
+five_thirty_eight = left_join(temp1, unemployment_tidy, by = "month")
+five_thirty_eight
+```
+
+This dataset is consisted of three different datasets, pols-month, snp and unemployment.It describes things like government polices, unemployment rate and etc. It contains `r names(five_thirty_eight)`. It includes `r ncol(five_thirty_eight)` columns and `r nrow(five_thirty_eight)` rows.
