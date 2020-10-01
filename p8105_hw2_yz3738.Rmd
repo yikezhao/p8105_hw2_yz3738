@@ -9,6 +9,7 @@ This is my solution to HW2.
 ```{r setup}
 library(tidyverse)
 library(readxl)
+library(dplyr)
 ```
 
 ## Problem 1
@@ -68,4 +69,49 @@ precip_df =
 
 left_join(precip_df, month_df, by = "month")
 ```
-This dataset contains information from the Mr. Trashwheel trash collector in Baltimore, Maryland. As trash enters the inner harbor, the trashwheel collects that trash, and stores it in a dumpster. The dataset contains information on year, month, and trash collected, include some specific kinds of trash. There are a total of `r nrow(trashwheel_df)` rows in our final dataser. Additional data sheets include month precipitation data. 
+This dataset contains information from the Mr. Trashwheel trash collector in Baltimore, Maryland. As trash enters the inner harbor, the trashwheel collects that trash, and stores it in a dumpster. The dataset contains information on year, month, and trash collected, include some specific kinds of trash. There are a total of `r nrow(trashwheel_df)` rows in our final dataset. Additional data sheets include month precipitation data. 
+
+## Problem 2
+
+Read the NYC Transit data.
+
+```{r}
+nyc_df = 
+  read_csv(
+   "./Data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv"
+  ) %>%
+  janitor::clean_names() %>%
+  select(line, station_name, station_latitude, station_longitude, route1, route2, route3, route4, route5, route6, route7, route8, route9, route10, route11, entry, vending, entrance_type, ada) %>%
+  mutate(entry = ifelse(entry, yes, no))
+```
+
+This dataset contains information of NYC transit. It contains `r names(nyc_df)`. It includes `r ncol(nyc_df)` columns and `r nrow(nyc_df)` rows. I think the original dataset isn't very tidy.
+
+```{r}
+nrow(distinct(nyc_df, line, station_name))
+nrow(distinct(filter(nyc_df, ada == "TRUE"), line, station_name))
+nrow(filter(nyc_df, vending == "NO")) / nrow(nyc_df)
+```
+There are 465 distinct stations here, 84 stations are ADA compliant, 9.8% of station entrances / exits without vending allow entrance.
+
+```{r}
+nyc_route =
+  mutate(
+  nyc_df,
+  route8 = as.character(route8),
+  route9 = as.character(route9),
+  route10 = as.character(route10),
+  route11 = as.character(route11)
+  )
+nyc_df_tidy = 
+  pivot_longer(
+    nyc_route,
+    route1:route11,
+    names_to = "route_name",
+    values_to = "route_number"
+  )
+nrow(distinct(filter(nyc_df_tidy, route_number == "A"), line, station_name))
+nrow(distinct(filter(nyc_df_tidy, route_number == "A", ada == "TRUE"), line, station_name))
+```
+60 distinct stations serve the A train. 17 of the stations are ADA compliant. 
+
